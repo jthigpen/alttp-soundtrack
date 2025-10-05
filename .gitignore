@@ -1,3 +1,5 @@
 *.rar
 .claude/
 .DS_Store
+flac_output/
+alac_output/

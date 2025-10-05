@@ -8,6 +8,7 @@ set -e  # Exit on error
 # Default values
 FORMAT="alac"
 OUTPUT_DIR=""
+EXPECTED_MD5="e233042432a4693f315cd3c190c63f0a"
 
 # Parse arguments
 show_usage() {
@@ -72,6 +73,31 @@ if [ ! -f "$RAR_FILE" ]; then
     echo "Error: RAR file '$RAR_FILE' not found"
     exit 1
 fi
+
+# Verify MD5 checksum
+echo "Verifying RAR file integrity..."
+if command -v md5 &> /dev/null; then
+    # macOS md5 command
+    ACTUAL_MD5=$(md5 -q "$RAR_FILE")
+elif command -v md5sum &> /dev/null; then
+    # Linux md5sum command
+    ACTUAL_MD5=$(md5sum "$RAR_FILE" | awk '{print $1}')
+else
+    echo "Warning: md5 or md5sum not found, skipping checksum verification"
+    ACTUAL_MD5="$EXPECTED_MD5"
+fi
+
+if [ "$ACTUAL_MD5" != "$EXPECTED_MD5" ]; then
+    echo "Error: MD5 checksum mismatch!"
+    echo "  Expected: $EXPECTED_MD5"
+    echo "  Got:      $ACTUAL_MD5"
+    echo ""
+    echo "This may not be the correct RAR file."
+    echo "Please download the official file from: https://www.youtube.com/watch?v=I_jMOfoflMY&t=370s"
+    exit 1
+fi
+echo "Checksum verified successfully"
+echo ""
 
 # Check if unrar is installed
 if ! command -v unrar &> /dev/null; then

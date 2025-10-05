@@ -9,7 +9,7 @@ Convert Zerethn's [A Link to the Past: Enhanced Soundtrack](https://www.youtube.
 3. Run the conversion script:
 
 ```bash
-./build_alac.sh "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh "alttp enhanced soundtrack pcm.rar"
 ```
 
 ## Prerequisites
@@ -29,27 +29,28 @@ brew install unrar ffmpeg flac atomicparsley
 
 **Convert to ALAC (default):**
 ```bash
-./build_alac.sh "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh "alttp enhanced soundtrack pcm.rar"
 ```
 
 **Convert to FLAC:**
 ```bash
-./build_alac.sh -f flac "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh -f flac "alttp enhanced soundtrack pcm.rar"
 ```
 
 **Custom output directory:**
 ```bash
-./build_alac.sh -f alac -o ./my_music "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh -f alac -o ./my_music "alttp enhanced soundtrack pcm.rar"
 ```
 
 **View all options:**
 ```bash
-./build_alac.sh --help
+./build_alttp.sh --help
 ```
 
 ## Output
 
 The script will:
+- Verify the RAR file MD5 checksum to ensure file integrity
 - Extract all PCM files from the RAR archive
 - Convert to your chosen format (FLAC or ALAC)
 - Apply metadata (artist, album, title, track number)
@@ -59,6 +60,20 @@ All 33 tracks will be properly tagged with:
 - **Artist:** Zerethn
 - **Album:** A Link to the Past: Enhanced Soundtrack
 - **Track titles and numbers**
+
+## Testing
+
+Run the test suite to verify both FLAC and ALAC conversions work correctly:
+
+```bash
+./test-build.sh
+```
+
+This will:
+- Test both FLAC and ALAC conversion
+- Verify output file counts match input PCM files
+- Check that all files have proper metadata tags
+- Display a pass/fail summary
 
 ## About the Soundtrack
 

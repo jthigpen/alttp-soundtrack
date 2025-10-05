@@ -18,36 +18,42 @@ Install the following tools via Homebrew:
 
 Convert to ALAC (default):
 ```bash
-./build_alac.sh "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh "alttp enhanced soundtrack pcm.rar"
 ```
 
 Convert to FLAC:
 ```bash
-./build_alac.sh -f flac "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh -f flac "alttp enhanced soundtrack pcm.rar"
 ```
 
 Specify custom output directory:
 ```bash
-./build_alac.sh -f alac -o ./custom_output "alttp enhanced soundtrack pcm.rar"
+./build_alttp.sh -f alac -o ./custom_output "alttp enhanced soundtrack pcm.rar"
+```
+
+Run tests:
+```bash
+./test-build.sh
 ```
 
 ## Architecture
 
 ### Audio Conversion Process
 
-1. **Extraction**: PCM files are extracted from RAR archive to a temporary directory
-2. **Conversion**: Each PCM file is converted using ffmpeg:
+1. **Verification**: MD5 checksum is verified against expected hash `e233042432a4693f315cd3c190c63f0a` to ensure file integrity
+2. **Extraction**: PCM files are extracted from RAR archive to a temporary directory
+3. **Conversion**: Each PCM file is converted using ffmpeg:
    - Skips the 8-byte MSU-1 header (`-skip_initial_bytes 8`)
    - Assumes 16-bit stereo PCM at 44.1kHz (`-f s16le -ar 44100 -ac 2`)
    - Outputs to either FLAC or ALAC format
-3. **Metadata**: Track metadata is applied using format-specific tools:
+4. **Metadata**: Track metadata is applied using format-specific tools:
    - FLAC: `metaflac` with Vorbis comments
    - ALAC: `AtomicParsley` with MP4 atoms
-4. **Cleanup**: Temporary extraction directory is removed
+5. **Cleanup**: Temporary extraction directory is removed
 
 ### Track Metadata
 
-Track metadata is hardcoded in the `TRACKS` array in `build_alac.sh:157-191`. Each entry contains:
+Track metadata is hardcoded in the `TRACKS` array in `build_alttp.sh` (around line 183). Each entry contains:
 - Filename (e.g., "alttp_msu-1")
 - Title (e.g., "Title Screen")
 - Track number
