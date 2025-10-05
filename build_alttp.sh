@@ -127,9 +127,12 @@ if [ "$FORMAT" == "alac" ]; then
     fi
 fi
 
-echo "=== ALTTP MSU-1 to ${FORMAT^^} Conversion ==="
+# Create uppercase version of format for display (bash 3.2 compatible)
+FORMAT_UPPER=$(echo "$FORMAT" | tr '[:lower:]' '[:upper:]')
+
+echo "=== ALTTP MSU-1 to $FORMAT_UPPER Conversion ==="
 echo "RAR File: $RAR_FILE"
-echo "Output Format: ${FORMAT^^}"
+echo "Output Format: $FORMAT_UPPER"
 echo "Output Directory: $OUTPUT_DIR"
 echo ""
 
@@ -145,34 +148,60 @@ unrar x "$RAR_FILE" "$TEMP_DIR/" > /dev/null
 mkdir -p "$OUTPUT_DIR"
 
 # Find all PCM files and convert them
-echo "Converting PCM files to ${FORMAT^^}..."
+echo "Converting PCM files to $FORMAT_UPPER..."
 PCM_COUNT=0
+
+# Function to generate unique output filename based on path
+get_output_name() {
+    local pcm_file="$1"
+    local temp_dir="$2"
+
+    # Get relative path from temp directory
+    local rel_path="${pcm_file#$temp_dir/}"
+    local base=$(basename "$pcm_file" .pcm)
+
+    # Check if file is in a subdirectory and generate appropriate name
+    if [[ "$rel_path" == *"Bonus Tracks"* ]]; then
+        echo "${base}-bonus-tracks"
+    elif [[ "$rel_path" == *"No SFX"* ]]; then
+        echo "${base}-no-sfx"
+    else
+        echo "$base"
+    fi
+}
+
+# Create temporary file list
+PCM_LIST=$(mktemp)
+find "$TEMP_DIR" -name "*.pcm" -type f > "$PCM_LIST"
 
 if [ "$FORMAT" == "flac" ]; then
     # Convert to FLAC
-    find "$TEMP_DIR" -name "*.pcm" -type f | while read -r pcm_file; do
-        base=$(basename "$pcm_file" .pcm)
-        echo "  Converting: $base"
+    while IFS= read -r pcm_file; do
+        output_name=$(get_output_name "$pcm_file" "$TEMP_DIR")
+        echo "  Converting: $output_name"
 
         # Convert to FLAC, skipping the 8-byte MSU1 header
         ffmpeg -f s16le -ar 44100 -ac 2 -skip_initial_bytes 8 -i "$pcm_file" \
-            "$OUTPUT_DIR/$base.flac" -y > /dev/null 2>&1
+            "$OUTPUT_DIR/$output_name.flac" -y </dev/null > /dev/null 2>&1
 
         PCM_COUNT=$((PCM_COUNT + 1))
-    done
+    done < "$PCM_LIST"
 else
     # Convert to ALAC
-    find "$TEMP_DIR" -name "*.pcm" -type f | while read -r pcm_file; do
-        base=$(basename "$pcm_file" .pcm)
-        echo "  Converting: $base"
+    while IFS= read -r pcm_file; do
+        output_name=$(get_output_name "$pcm_file" "$TEMP_DIR")
+        echo "  Converting: $output_name"
 
         # Convert to ALAC, skipping the 8-byte MSU1 header
         ffmpeg -f s16le -ar 44100 -ac 2 -skip_initial_bytes 8 -i "$pcm_file" \
-            -c:a alac "$OUTPUT_DIR/$base.m4a" -y > /dev/null 2>&1
+            -c:a alac "$OUTPUT_DIR/$output_name.m4a" -y </dev/null > /dev/null 2>&1
 
         PCM_COUNT=$((PCM_COUNT + 1))
-    done
+    done < "$PCM_LIST"
 fi
+
+# Clean up temp file list
+/bin/rm "$PCM_LIST"
 
 echo "Converted $PCM_COUNT files"
 echo ""
@@ -214,6 +243,12 @@ declare -a TRACKS=(
     "alttp_msu-32|Lost Woods (Ocarina of Time)|32"
     "alttp_msu-33|Town theme (Zelda II)|33"
     "alttp_msu-34|Eagle's Tower (Link's Awakening)|34"
+    "alttp_msu-5-bonus-tracks|Majestic Castle (Bonus)|35"
+    "alttp_msu-7-bonus-tracks|Sanctuary (Bonus)|36"
+    "alttp_msu-21-bonus-tracks|Dark Golden Land (Bonus)|37"
+    "alttp_msu-22-bonus-tracks|Dungeon of Shadows (Bonus)|38"
+    "alttp_msu-10-no-sfx|Fortune Teller (No SFX)|39"
+    "alttp_msu-29-no-sfx|Power of the Gods (No SFX)|40"
 )
 
 ARTIST="Zerethn"
@@ -259,5 +294,5 @@ rm -rf "$TEMP_DIR"
 
 echo ""
 echo "=== Conversion Complete ==="
-echo "${FORMAT^^} files with metadata are in: $OUTPUT_DIR"
+echo "$FORMAT_UPPER files with metadata are in: $OUTPUT_DIR"
 echo "Total tracks: ${#TRACKS[@]}"

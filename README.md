@@ -56,10 +56,15 @@ The script will:
 - Apply metadata (artist, album, title, track number)
 - Save files to `./flac_output` or `./alac_output` (or your custom directory)
 
-All 33 tracks will be properly tagged with:
+All 39 tracks will be properly tagged with:
 - **Artist:** Zerethn
 - **Album:** A Link to the Past: Enhanced Soundtrack
 - **Track titles and numbers**
+
+The output includes:
+- 33 main soundtrack tracks
+- 4 bonus track variants (from Extras/Bonus Tracks)
+- 2 "No SFX" variants (from Extras/No SFX)
 
 ## Testing
 

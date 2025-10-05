@@ -53,13 +53,18 @@ Run tests:
 
 ### Track Metadata
 
-Track metadata is hardcoded in the `TRACKS` array in `build_alttp.sh` (around line 183). Each entry contains:
-- Filename (e.g., "alttp_msu-1")
-- Title (e.g., "Title Screen")
-- Track number
+Track metadata is hardcoded in the `TRACKS` array in `build_alttp.sh` (around line 210). The array contains 39 entries total:
+- 33 main soundtrack tracks (alttp_msu-1 through alttp_msu-34, excluding track 15)
+- 4 bonus tracks (variants of 5, 7, 21, 22 with "-bonus-tracks" suffix)
+- 2 "No SFX" versions (variants of 10, 29 with "-no-sfx" suffix)
+
+Each entry contains:
+- Filename (e.g., "alttp_msu-1" or "alttp_msu-5-bonus-tracks")
+- Title (e.g., "Title Screen" or "Majestic Castle (Bonus)")
+- Track number (1-40)
 
 Album metadata:
 - Artist: "Zerethn"
 - Album: "A Link to the Past: Enhanced Soundtrack"
 
-Note: The script includes 33 tracks but track 15 ("Great Victory!") is not in the PCM archive, so it's excluded from the metadata array.
+**Important**: The RAR archive contains duplicate filenames in different directories (Extras/Bonus Tracks and Extras/No SFX). The script preserves all variants by appending suffixes to distinguish them.

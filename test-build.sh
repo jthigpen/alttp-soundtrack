@@ -57,9 +57,9 @@ cleanup() {
 trap cleanup EXIT
 
 # Count PCM files in RAR
-echo "Counting PCM files in RAR archive..."
-PCM_COUNT=$(unrar lb "$RAR_FILE" | grep -c "\.pcm$" || true)
-echo "Expected PCM files: $PCM_COUNT"
+echo "Counting PCM tracks in RAR archive..."
+EXPECTED_PCM_COUNT=$(unrar lb "$RAR_FILE" | grep -c "\.pcm$" || true)
+echo "Expected PCM files: $EXPECTED_PCM_COUNT"
 echo ""
 
 # Test 1: FLAC Conversion
@@ -69,10 +69,10 @@ echo ""
 
 # Test 1a: FLAC file count
 FLAC_FILE_COUNT=$(find "$FLAC_OUTPUT" -name "*.flac" -type f | wc -l | tr -d ' ')
-if [ "$FLAC_FILE_COUNT" -eq "$PCM_COUNT" ]; then
+if [ "$FLAC_FILE_COUNT" -eq "$EXPECTED_PCM_COUNT" ]; then
     print_result 0 "FLAC file count matches PCM count ($FLAC_FILE_COUNT files)"
 else
-    print_result 1 "FLAC file count mismatch (expected $PCM_COUNT, got $FLAC_FILE_COUNT)"
+    print_result 1 "FLAC file count mismatch (expected $EXPECTED_PCM_COUNT, got $FLAC_FILE_COUNT)"
 fi
 
 # Test 1b: FLAC metadata
@@ -110,10 +110,10 @@ echo ""
 
 # Test 2a: ALAC file count
 ALAC_FILE_COUNT=$(find "$ALAC_OUTPUT" -name "*.m4a" -type f | wc -l | tr -d ' ')
-if [ "$ALAC_FILE_COUNT" -eq "$PCM_COUNT" ]; then
+if [ "$ALAC_FILE_COUNT" -eq "$EXPECTED_PCM_COUNT" ]; then
     print_result 0 "ALAC file count matches PCM count ($ALAC_FILE_COUNT files)"
 else
-    print_result 1 "ALAC file count mismatch (expected $PCM_COUNT, got $ALAC_FILE_COUNT)"
+    print_result 1 "ALAC file count mismatch (expected $EXPECTED_PCM_COUNT, got $ALAC_FILE_COUNT)"
 fi
 
 # Test 2b: ALAC metadata
