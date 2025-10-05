@@ -88,8 +88,9 @@ find "$FLAC_OUTPUT" -name "*.flac" -type f | while read -r flac_file; do
     ALBUM=$(metaflac --show-tag=ALBUM "$flac_file" | cut -d= -f2)
     TITLE=$(metaflac --show-tag=TITLE "$flac_file" | cut -d= -f2)
     TRACKNUM=$(metaflac --show-tag=TRACKNUMBER "$flac_file" | cut -d= -f2)
+    GENRE=$(metaflac --show-tag=GENRE "$flac_file" | cut -d= -f2)
 
-    if [ -z "$ARTIST" ] || [ -z "$ALBUM" ] || [ -z "$TITLE" ] || [ -z "$TRACKNUM" ]; then
+    if [ -z "$ARTIST" ] || [ -z "$ALBUM" ] || [ -z "$TITLE" ] || [ -z "$TRACKNUM" ] || [ -z "$GENRE" ]; then
         FLAC_NO_METADATA=$((FLAC_NO_METADATA + 1))
         echo "  Missing metadata in: $(basename "$flac_file")"
     fi
@@ -147,8 +148,9 @@ find "$ALAC_OUTPUT" -name "*.m4a" -type f | while read -r alac_file; do
     ALBUM=$(AtomicParsley "$alac_file" -t 2>/dev/null | grep "Atom \"©alb\"" | cut -d: -f2- | xargs || true)
     TITLE=$(AtomicParsley "$alac_file" -t 2>/dev/null | grep "Atom \"©nam\"" | cut -d: -f2- | xargs || true)
     TRACKNUM=$(AtomicParsley "$alac_file" -t 2>/dev/null | grep "Atom \"trkn\"" | cut -d: -f2- | xargs || true)
+    GENRE=$(AtomicParsley "$alac_file" -t 2>/dev/null | grep "Atom \"©gen\"" | cut -d: -f2- | xargs || true)
 
-    if [ -z "$ARTIST" ] || [ -z "$ALBUM" ] || [ -z "$TITLE" ] || [ -z "$TRACKNUM" ]; then
+    if [ -z "$ARTIST" ] || [ -z "$ALBUM" ] || [ -z "$TITLE" ] || [ -z "$TRACKNUM" ] || [ -z "$GENRE" ]; then
         ALAC_NO_METADATA=$((ALAC_NO_METADATA + 1))
         echo "  Missing metadata in: $(basename "$alac_file")"
     fi

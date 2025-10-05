@@ -61,6 +61,7 @@ The script will:
 All 39 tracks will be properly tagged with:
 - **Artist:** Zerethn
 - **Album:** A Link to the Past: Enhanced Soundtrack
+- **Genre:** Soundtracks
 - **Track titles and numbers**
 
 The output includes:

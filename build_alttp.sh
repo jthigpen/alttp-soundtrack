@@ -253,6 +253,7 @@ declare -a TRACKS=(
 
 ARTIST="Zerethn"
 ALBUM="A Link to the Past: Enhanced Soundtrack"
+GENRE="Soundtracks"
 
 # Get script directory for album artwork
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -277,6 +278,7 @@ if [ "$FORMAT" == "flac" ]; then
                      --set-tag="ALBUM=$ALBUM" \
                      --set-tag="TITLE=$title" \
                      --set-tag="TRACKNUMBER=$tracknum" \
+                     --set-tag="GENRE=$GENRE" \
                      "$OUTPUT_DIR/$filename.flac"
 
             # Add album artwork if available
@@ -298,7 +300,8 @@ else
                 --artist \"$ARTIST\" \
                 --album \"$ALBUM\" \
                 --title \"$title\" \
-                --tracknum \"$tracknum\""
+                --tracknum \"$tracknum\" \
+                --genre \"$GENRE\""
 
             if [ -n "$ALBUM_ART" ]; then
                 ATOMICPARSLEY_CMD="$ATOMICPARSLEY_CMD --artwork \"$ALBUM_ART\""
