@@ -2,7 +2,7 @@
 
 Convert Zerethn's [A Link to the Past: Enhanced Soundtrack](https://www.youtube.com/watch?v=I_jMOfoflMY&t=370s) from MSU-1 PCM format to FLAC or ALAC with full metadata tagging.
 
-# Note: Song title metadata are currently mapped wrong. I might fix it one day...
+## 🚨 Note: Song title metadata are currently mapped wrong. I might fix it one day...
 
 ## Quick Start
 
