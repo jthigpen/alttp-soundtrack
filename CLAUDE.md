@@ -47,8 +47,9 @@ Run tests:
    - Assumes 16-bit stereo PCM at 44.1kHz (`-f s16le -ar 44100 -ac 2`)
    - Outputs to either FLAC or ALAC format
 4. **Metadata**: Track metadata is applied using format-specific tools:
-   - FLAC: `metaflac` with Vorbis comments
-   - ALAC: `AtomicParsley` with MP4 atoms
+   - FLAC: `metaflac` with Vorbis comments and embedded album artwork
+   - ALAC: `AtomicParsley` with MP4 atoms and embedded album artwork
+   - Album artwork: `alttp-box.png` from the script directory
 5. **Cleanup**: Temporary extraction directory is removed
 
 ### Track Metadata

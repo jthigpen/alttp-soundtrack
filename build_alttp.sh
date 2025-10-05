@@ -254,6 +254,16 @@ declare -a TRACKS=(
 ARTIST="Zerethn"
 ALBUM="A Link to the Past: Enhanced Soundtrack"
 
+# Get script directory for album artwork
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ALBUM_ART="$SCRIPT_DIR/alttp-box.png"
+
+# Check if album artwork exists
+if [ ! -f "$ALBUM_ART" ]; then
+    echo "Warning: Album artwork not found at $ALBUM_ART"
+    ALBUM_ART=""
+fi
+
 # Apply metadata to each track
 if [ "$FORMAT" == "flac" ]; then
     # Tag FLAC files
@@ -268,6 +278,11 @@ if [ "$FORMAT" == "flac" ]; then
                      --set-tag="TITLE=$title" \
                      --set-tag="TRACKNUMBER=$tracknum" \
                      "$OUTPUT_DIR/$filename.flac"
+
+            # Add album artwork if available
+            if [ -n "$ALBUM_ART" ]; then
+                metaflac --import-picture-from="$ALBUM_ART" "$OUTPUT_DIR/$filename.flac" 2>/dev/null
+            fi
         fi
     done
 else
@@ -277,12 +292,21 @@ else
 
         if [ -f "$OUTPUT_DIR/$filename.m4a" ]; then
             echo "  Tagging: $title"
-            AtomicParsley "$OUTPUT_DIR/$filename.m4a" \
-                --artist "$ARTIST" \
-                --album "$ALBUM" \
-                --title "$title" \
-                --tracknum "$tracknum" \
-                --overWrite > /dev/null 2>&1
+
+            # Build AtomicParsley command with optional artwork
+            ATOMICPARSLEY_CMD="AtomicParsley \"$OUTPUT_DIR/$filename.m4a\" \
+                --artist \"$ARTIST\" \
+                --album \"$ALBUM\" \
+                --title \"$title\" \
+                --tracknum \"$tracknum\""
+
+            if [ -n "$ALBUM_ART" ]; then
+                ATOMICPARSLEY_CMD="$ATOMICPARSLEY_CMD --artwork \"$ALBUM_ART\""
+            fi
+
+            ATOMICPARSLEY_CMD="$ATOMICPARSLEY_CMD --overWrite"
+
+            eval "$ATOMICPARSLEY_CMD" > /dev/null 2>&1
         fi
     done
 fi

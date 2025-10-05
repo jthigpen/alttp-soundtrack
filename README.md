@@ -53,7 +53,7 @@ The script will:
 - Verify the RAR file MD5 checksum to ensure file integrity
 - Extract all PCM files from the RAR archive
 - Convert to your chosen format (FLAC or ALAC)
-- Apply metadata (artist, album, title, track number)
+- Apply metadata (artist, album, title, track number, album artwork)
 - Save files to `./flac_output` or `./alac_output` (or your custom directory)
 
 All 39 tracks will be properly tagged with:

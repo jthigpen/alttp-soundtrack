@@ -101,6 +101,24 @@ else
     print_result 1 "$FLAC_NO_METADATA FLAC files missing metadata"
 fi
 
+# Test 1c: FLAC album artwork
+echo "Checking FLAC album artwork..."
+FLAC_NO_ARTWORK=0
+
+find "$FLAC_OUTPUT" -name "*.flac" -type f | while read -r flac_file; do
+    # Check for PICTURE metadata block
+    if ! metaflac --list --block-type=PICTURE "$flac_file" | grep -q "type: 6 (PICTURE)"; then
+        FLAC_NO_ARTWORK=$((FLAC_NO_ARTWORK + 1))
+        echo "  Missing artwork in: $(basename "$flac_file")"
+    fi
+done
+
+if [ "$FLAC_NO_ARTWORK" -eq 0 ]; then
+    print_result 0 "All FLAC files have album artwork"
+else
+    print_result 1 "$FLAC_NO_ARTWORK FLAC files missing artwork"
+fi
+
 echo ""
 
 # Test 2: ALAC Conversion
@@ -140,6 +158,24 @@ if [ "$ALAC_NO_METADATA" -eq 0 ]; then
     print_result 0 "All ALAC files have metadata"
 else
     print_result 1 "$ALAC_NO_METADATA ALAC files missing metadata"
+fi
+
+# Test 2c: ALAC album artwork
+echo "Checking ALAC album artwork..."
+ALAC_NO_ARTWORK=0
+
+find "$ALAC_OUTPUT" -name "*.m4a" -type f | while read -r alac_file; do
+    # Check for album artwork (covr atom)
+    if ! AtomicParsley "$alac_file" -t 2>/dev/null | grep -q "Atom \"covr\""; then
+        ALAC_NO_ARTWORK=$((ALAC_NO_ARTWORK + 1))
+        echo "  Missing artwork in: $(basename "$alac_file")"
+    fi
+done
+
+if [ "$ALAC_NO_ARTWORK" -eq 0 ]; then
+    print_result 0 "All ALAC files have album artwork"
+else
+    print_result 1 "$ALAC_NO_ARTWORK ALAC files missing artwork"
 fi
 
 # Test 3: File count equality
