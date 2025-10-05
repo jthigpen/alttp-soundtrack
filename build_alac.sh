@@ -1,19 +1,71 @@
 #!/bin/bash
 
-# ALTTP MSU-1 to ALAC Conversion Script
-# This script extracts PCM files from a RAR archive and converts them to ALAC format with metadata
+# ALTTP MSU-1 Audio Conversion Script
+# This script extracts PCM files from a RAR archive and converts them to FLAC or ALAC format with metadata
 
 set -e  # Exit on error
 
+# Default values
+FORMAT="alac"
+OUTPUT_DIR=""
+
+# Parse arguments
+show_usage() {
+    echo "Usage: $0 [OPTIONS] <path-to-rar-file>"
+    echo ""
+    echo "Options:"
+    echo "  -f, --format FORMAT    Output format: 'flac' or 'alac' (default: alac)"
+    echo "  -o, --output DIR       Output directory (default: ./flac_output or ./alac_output)"
+    echo "  -h, --help             Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 soundtrack.rar                    # Convert to ALAC (default)"
+    echo "  $0 -f flac soundtrack.rar            # Convert to FLAC"
+    echo "  $0 -f alac -o ./music soundtrack.rar # Convert to ALAC in ./music"
+    exit 1
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|--format)
+            FORMAT="$2"
+            shift 2
+            ;;
+        -o|--output)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        -h|--help)
+            show_usage
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            show_usage
+            ;;
+        *)
+            RAR_FILE="$1"
+            shift
+            ;;
+    esac
+done
+
 # Check if RAR file is provided
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <path-to-rar-file> [output-directory]"
-    echo "Example: $0 alttp_soundtrack.rar ./output"
+if [ -z "$RAR_FILE" ]; then
+    echo "Error: No RAR file specified"
+    show_usage
+fi
+
+# Validate format
+if [ "$FORMAT" != "flac" ] && [ "$FORMAT" != "alac" ]; then
+    echo "Error: Format must be 'flac' or 'alac'"
     exit 1
 fi
 
-RAR_FILE="$1"
-OUTPUT_DIR="${2:-./alac_output}"
+# Set default output directory based on format if not specified
+if [ -z "$OUTPUT_DIR" ]; then
+    OUTPUT_DIR="./${FORMAT}_output"
+fi
 
 # Check if RAR file exists
 if [ ! -f "$RAR_FILE" ]; then
@@ -33,14 +85,25 @@ if ! command -v ffmpeg &> /dev/null; then
     exit 1
 fi
 
-# Check if AtomicParsley is installed
-if ! command -v AtomicParsley &> /dev/null; then
-    echo "Error: AtomicParsley is not installed. Install it with: brew install atomicparsley"
-    exit 1
+# Check if metaflac is installed (for FLAC)
+if [ "$FORMAT" == "flac" ]; then
+    if ! command -v metaflac &> /dev/null; then
+        echo "Error: metaflac is not installed. Install it with: brew install flac"
+        exit 1
+    fi
 fi
 
-echo "=== ALTTP MSU-1 to ALAC Conversion ==="
+# Check if AtomicParsley is installed (for ALAC)
+if [ "$FORMAT" == "alac" ]; then
+    if ! command -v AtomicParsley &> /dev/null; then
+        echo "Error: AtomicParsley is not installed. Install it with: brew install atomicparsley"
+        exit 1
+    fi
+fi
+
+echo "=== ALTTP MSU-1 to ${FORMAT^^} Conversion ==="
 echo "RAR File: $RAR_FILE"
+echo "Output Format: ${FORMAT^^}"
 echo "Output Directory: $OUTPUT_DIR"
 echo ""
 
@@ -56,18 +119,34 @@ unrar x "$RAR_FILE" "$TEMP_DIR/" > /dev/null
 mkdir -p "$OUTPUT_DIR"
 
 # Find all PCM files and convert them
-echo "Converting PCM files to ALAC..."
+echo "Converting PCM files to ${FORMAT^^}..."
 PCM_COUNT=0
-find "$TEMP_DIR" -name "*.pcm" -type f | while read -r pcm_file; do
-    base=$(basename "$pcm_file" .pcm)
-    echo "  Converting: $base"
 
-    # Convert to ALAC, skipping the 8-byte MSU1 header
-    ffmpeg -f s16le -ar 44100 -ac 2 -skip_initial_bytes 8 -i "$pcm_file" \
-        -c:a alac "$OUTPUT_DIR/$base.m4a" -y > /dev/null 2>&1
+if [ "$FORMAT" == "flac" ]; then
+    # Convert to FLAC
+    find "$TEMP_DIR" -name "*.pcm" -type f | while read -r pcm_file; do
+        base=$(basename "$pcm_file" .pcm)
+        echo "  Converting: $base"
 
-    PCM_COUNT=$((PCM_COUNT + 1))
-done
+        # Convert to FLAC, skipping the 8-byte MSU1 header
+        ffmpeg -f s16le -ar 44100 -ac 2 -skip_initial_bytes 8 -i "$pcm_file" \
+            "$OUTPUT_DIR/$base.flac" -y > /dev/null 2>&1
+
+        PCM_COUNT=$((PCM_COUNT + 1))
+    done
+else
+    # Convert to ALAC
+    find "$TEMP_DIR" -name "*.pcm" -type f | while read -r pcm_file; do
+        base=$(basename "$pcm_file" .pcm)
+        echo "  Converting: $base"
+
+        # Convert to ALAC, skipping the 8-byte MSU1 header
+        ffmpeg -f s16le -ar 44100 -ac 2 -skip_initial_bytes 8 -i "$pcm_file" \
+            -c:a alac "$OUTPUT_DIR/$base.m4a" -y > /dev/null 2>&1
+
+        PCM_COUNT=$((PCM_COUNT + 1))
+    done
+fi
 
 echo "Converted $PCM_COUNT files"
 echo ""
@@ -115,19 +194,37 @@ ARTIST="Zerethn"
 ALBUM="A Link to the Past: Enhanced Soundtrack"
 
 # Apply metadata to each track
-for track_info in "${TRACKS[@]}"; do
-    IFS='|' read -r filename title tracknum <<< "$track_info"
+if [ "$FORMAT" == "flac" ]; then
+    # Tag FLAC files
+    for track_info in "${TRACKS[@]}"; do
+        IFS='|' read -r filename title tracknum <<< "$track_info"
 
-    if [ -f "$OUTPUT_DIR/$filename.m4a" ]; then
-        echo "  Tagging: $title"
-        AtomicParsley "$OUTPUT_DIR/$filename.m4a" \
-            --artist "$ARTIST" \
-            --album "$ALBUM" \
-            --title "$title" \
-            --tracknum "$tracknum" \
-            --overWrite > /dev/null 2>&1
-    fi
-done
+        if [ -f "$OUTPUT_DIR/$filename.flac" ]; then
+            echo "  Tagging: $title"
+            metaflac --remove-all-tags "$OUTPUT_DIR/$filename.flac"
+            metaflac --set-tag="ARTIST=$ARTIST" \
+                     --set-tag="ALBUM=$ALBUM" \
+                     --set-tag="TITLE=$title" \
+                     --set-tag="TRACKNUMBER=$tracknum" \
+                     "$OUTPUT_DIR/$filename.flac"
+        fi
+    done
+else
+    # Tag ALAC files
+    for track_info in "${TRACKS[@]}"; do
+        IFS='|' read -r filename title tracknum <<< "$track_info"
+
+        if [ -f "$OUTPUT_DIR/$filename.m4a" ]; then
+            echo "  Tagging: $title"
+            AtomicParsley "$OUTPUT_DIR/$filename.m4a" \
+                --artist "$ARTIST" \
+                --album "$ALBUM" \
+                --title "$title" \
+                --tracknum "$tracknum" \
+                --overWrite > /dev/null 2>&1
+        fi
+    done
+fi
 
 # Clean up temporary directory
 echo ""
@@ -136,5 +233,5 @@ rm -rf "$TEMP_DIR"
 
 echo ""
 echo "=== Conversion Complete ==="
-echo "ALAC files with metadata are in: $OUTPUT_DIR"
+echo "${FORMAT^^} files with metadata are in: $OUTPUT_DIR"
 echo "Total tracks: ${#TRACKS[@]}"
